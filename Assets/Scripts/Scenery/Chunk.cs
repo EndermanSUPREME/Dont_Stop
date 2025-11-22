@@ -23,12 +23,8 @@ public class Chunk : MonoBehaviour
     [SerializeField] bool spawnTop = false;
     [SerializeField] bool spawnBottom = false;
 
-    // during recursive chain follow this bools ensure
-    // we do not backtrack
-    bool skipLeftNeighbor = false;
-    bool skipRightNeighbor = false;
-    bool skipTopNeighbor = false;
-    bool skipBottomNeighbor = false;
+    // code that prevents backtracking in recursion chain
+    int ignoreCode = -1;
 
     // recursively run down the neighbor chain
     Chunk leftNeighbor, rightNeighbor, topNeighbor, bottomNeighbor;
@@ -39,7 +35,6 @@ public class Chunk : MonoBehaviour
         {
             leftNeighbor = SpawnNeighborChunk(ref LeftChunks, leftPoint.position);
             leftNeighbor.SetRightNeighbor(this);
-            skipRightNeighbor = true;
         }
         else Debug.LogWarning("Left Point is not set!");
 
@@ -47,7 +42,6 @@ public class Chunk : MonoBehaviour
         {
             rightNeighbor = SpawnNeighborChunk(ref RightChunks, rightPoint.position);
             rightNeighbor.SetLeftNeighbor(this);
-            skipLeftNeighbor = true;
         }
         else Debug.LogWarning("Right Point is not set!");
 
@@ -55,7 +49,6 @@ public class Chunk : MonoBehaviour
         {
             topNeighbor = SpawnNeighborChunk(ref TopChunks, topPoint.position);
             topNeighbor.SetBottomNeighbor(this);
-            skipBottomNeighbor = true;
         }
         else Debug.LogWarning("Top Point is not set!");
 
@@ -63,7 +56,6 @@ public class Chunk : MonoBehaviour
         {
             bottomNeighbor = SpawnNeighborChunk(ref BottomChunks, bottomPoint.position);
             bottomNeighbor.SetTopNeighbor(this);
-            skipTopNeighbor = true;
         }
         else Debug.LogWarning("Bottom Point is not set!");
     }
@@ -85,8 +77,20 @@ public class Chunk : MonoBehaviour
 
     void EnableChunk() { gameObject.SetActive(true); }
     void DisableChunk() { gameObject.SetActive(false); }
-    public void TestChunk()
+    /// <summary>
+    /// Skip Codes:
+    /// -1 - No Skip | 
+    /// 0 - Skip Left Neighbor | 
+    /// 1 - Skip Right Neighbor | 
+    /// 2 - Skip Top Neighbor | 
+    /// 3 - Skip Bottom Neighbor
+    /// </summary>
+    public void TestChunk(int skipCode)
     {
+        ignoreCode = skipCode;
+
+        ChunkManager.Instance.SignalVisit();
+
         float distFromPlayer = Vector3.Distance(PlayerManager.Instance.transform.position, transform.position);
         if (distFromPlayer >= ChunkManager.Instance.GetMaxRenderDistance())
             DisableChunk(); // assume neighbors are too far away
@@ -95,10 +99,10 @@ public class Chunk : MonoBehaviour
             EnableChunk();
 
             // check if neighbors of enabled chunk also need enabled
-            if (!skipLeftNeighbor && leftNeighbor != null) leftNeighbor.TestChunk();
-            if (!skipRightNeighbor && rightNeighbor != null) rightNeighbor.TestChunk();
-            if (!skipTopNeighbor && topNeighbor != null) topNeighbor.TestChunk();
-            if (!skipBottomNeighbor && bottomNeighbor != null) bottomNeighbor.TestChunk();
+            if (ignoreCode != 0 && leftNeighbor != null) leftNeighbor.TestChunk(1); // skip right on next
+            if (ignoreCode != 1 && rightNeighbor != null) rightNeighbor.TestChunk(0); // skip left on next
+            if (ignoreCode != 2 && topNeighbor != null) topNeighbor.TestChunk(3); // skip bottom on next
+            if (ignoreCode != 3 && bottomNeighbor != null) bottomNeighbor.TestChunk(2); // skip top on next
         }
     }
     void OnTriggerEnter2D(Collider2D collider2d)

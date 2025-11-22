@@ -18,7 +18,7 @@ public class ChunkManager : Singleton<ChunkManager>
         chunksVisited = 0;
         if (chunkWithPlayer != null)
         {
-            chunkWithPlayer.TestChunk();
+            chunkWithPlayer.TestChunk(-1);
         }
     }
 
