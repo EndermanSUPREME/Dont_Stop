@@ -15,6 +15,7 @@ public class Mushroom : MonoBehaviour, IEnemy
     bool alerted = false;
     bool attacking = false;
     bool jumped = false;
+    bool useRunVel = true;
 
     [SerializeField] Vector2 groundCheckSize, hurtBoxSize;
     [SerializeField] Transform foot, leftHitCenter, rightHitCenter;
@@ -91,6 +92,7 @@ public class Mushroom : MonoBehaviour, IEnemy
         return groundCollider != null;
     }
 
+    RunAfter jumpCoolDown;
     void Move()
     {
         anim.SetBool("grounded", isGrounded());
@@ -102,20 +104,24 @@ public class Mushroom : MonoBehaviour, IEnemy
             if (alerted)
             {
                 bool moveRight = transform.position.x < playerPos.x;
+
+                if (!useRunVel)
+                {
+                    useRunVel = true;
+                    anim.Play("landing");
+                    jumpCoolDown = new RunAfter(2f, ResetJump);
+                }
                 
-                float dist2Player = Vector2.Distance(transform.position, playerPos);
-                if (dist2Player > stoppingDistance && !attacking) rb2d.linearVelocityX = (moveRight) ? moveSpeed : -moveSpeed;
-                else rb2d.linearVelocityX = 0;
+                if (useRunVel)
+                {
+                    float dist2Player = Vector2.Distance(new Vector2(transform.position.x, playerPos.y), playerPos);
+                    if (dist2Player > stoppingDistance && !attacking) rb2d.linearVelocityX = (moveRight) ? moveSpeed : -moveSpeed;
+                    else rb2d.linearVelocityX = 0;
+                }
 
                 anim.SetFloat("speed", Mathf.Clamp01(Mathf.Abs(rb2d.linearVelocityX)));
                 
                 spriteRenderer.flipX = moveRight;
-
-                if (jumped)
-                {
-                    anim.Play("landing");
-                    jumped = false;
-                }
 
                 // randomly decide to jump
                 Jump();
@@ -136,6 +142,7 @@ public class Mushroom : MonoBehaviour, IEnemy
             }
     }
 
+    void ResetJump() { jumped = false; }
     void Jump()
     {
         if (jumped) return;
@@ -155,7 +162,16 @@ public class Mushroom : MonoBehaviour, IEnemy
             {
                 anim.Play("jump");
                 jumped = true;
-                rb2d.linearVelocity = new Vector2(rb2d.linearVelocityX, jumpForce);
+                useRunVel = false;
+
+                // give jump random direction
+                float velX = rb2d.linearVelocityX;
+                if (velX < 0) velX -= Random.Range(0, 4);
+                else if (velX > 0) velX += Random.Range(0, 4);
+                else velX += Random.Range(-4, 4);
+
+                rb2d.linearVelocityX = velX;
+                rb2d.linearVelocityY = jumpForce + Random.Range(0, 4);
             }
         }
     }
@@ -195,7 +211,8 @@ public class Mushroom : MonoBehaviour, IEnemy
             playerLayer
         );
 
-        if (hitObject.transform.GetComponent<PlayerManager>() != null)
+        if (hitObject != null && hitObject.transform != null &&
+            hitObject.transform.GetComponent<PlayerManager>() != null)
         {
             PlayerManager.Instance.TakeDamage(damage);
         }
