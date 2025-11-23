@@ -50,7 +50,11 @@ public class Mushroom : MonoBehaviour, IEnemy
 
     void Update()
     {
-        if (IsDead()) return;
+        if (IsDead())
+        {
+            rb2d.linearVelocityX = 0;
+            return;
+        }
 
         if (PlayerManager.Instance != null)
         {
