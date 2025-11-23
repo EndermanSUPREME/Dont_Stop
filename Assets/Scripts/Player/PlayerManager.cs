@@ -57,6 +57,7 @@ public class PlayerManager : Singleton<PlayerManager>
     [Header("Player Stats")]
     public float moveSpeed = 4, jumpForce = 3, gravityMultiplier = 2, launchPadMultiplier = 2.5f;
     public int attackDamage = 10;
+    int maxHealth = 100;
     [SerializeField] int health = 100;
 
     RunAfter evt;
@@ -69,6 +70,8 @@ public class PlayerManager : Singleton<PlayerManager>
     {
         iframeActive = false;
     }
+
+    public float GetHealthPercent() => Mathf.Clamp01((float)health / (float)maxHealth);
 
     public void TakeDamage(int amount)
     {
@@ -103,4 +106,9 @@ public class PlayerManager : Singleton<PlayerManager>
     public LayerMask wallLayer;
     public LayerMask obstacleLayer;
     public LayerMask enemyLayer;
+
+    void Start()
+    {
+        maxHealth = health;
+    }
 }
