@@ -98,6 +98,7 @@ public class PlayerHUD : Singleton<PlayerHUD>
     public void GainTime(int amount)
     {
         remainingTime += amount;
+        ShowRemainingTime(); // update time display
     }
 
     bool warningShown = false;
