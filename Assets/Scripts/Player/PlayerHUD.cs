@@ -77,7 +77,10 @@ public class PlayerHUD : Singleton<PlayerHUD>
     {
         while (remainingTime > 0)
         {
-            --remainingTime;
+            // do not consume time when in a boss fight
+            if (!PlayerManager.Instance.inBossFight)
+                --remainingTime;
+                
             ShowRemainingTime();
             await Task.Delay(1000);
         }

@@ -53,6 +53,7 @@ public class PlayerManager : Singleton<PlayerManager>
 {
     [Header("Player Components")]
     [SerializeField] Animator playerAnimator;
+    [SerializeField] PlayerCamera playerCamera;
 
     [Header("Player Stats")]
     public float moveSpeed = 4, jumpForce = 3, gravityMultiplier = 2, launchPadMultiplier = 2.5f;
@@ -143,12 +144,26 @@ public class PlayerManager : Singleton<PlayerManager>
         if (aura < 0) aura = 0;
     }
 
+    public void SetBossViewPoint(Vector3 pos)
+    {
+        if (playerCamera) playerCamera.SetBossViewPoint(pos);
+    }
+    public void DetachCamera()
+    {
+        if (playerCamera) playerCamera.Detach();
+    }
+    public void AttachCamera()
+    {
+        if (playerCamera) playerCamera.Attach();
+    }
+
     [Header("Player States")]
     public bool grounded;
     public bool huggingWall;
     public bool gamePaused;
     public bool attacking = false;
     public bool falling = false;
+    public bool inBossFight = false;
     bool isDead = false;
     [SerializeField] bool iframeActive = false;
 

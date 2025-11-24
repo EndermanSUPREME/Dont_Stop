@@ -4,3 +4,8 @@ interface IEnemy
     void Ignite();
     bool IsDead();
 }
+
+interface IBoss
+{
+    void StartFight();
+}

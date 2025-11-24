@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+using Utilities;
+
 [RequireComponent(typeof(BoxCollider2D))]
 public class Chunk : MonoBehaviour
 {
@@ -28,6 +30,11 @@ public class Chunk : MonoBehaviour
     [SerializeField] int spawnCount = 3;
     [SerializeField] int enemyCount; // inspector var
     [SerializeField] Transform enemyGroup;
+
+    [Header("Boss Data")]
+    public bool bossChunk = false;
+    [SerializeField] Transform boss, bossViewPoint;
+    [SerializeField] GameObject border;
 
     [HideInInspector] public Chunk child = null;
     [HideInInspector] public Chunk parent = null;
@@ -84,6 +91,27 @@ public class Chunk : MonoBehaviour
         else Debug.LogWarning("Bottom Point is not set!");
 
         SpawnEnemies();
+    }
+
+    void Update()
+    {
+        if (bossChunk && boss != null)
+        {
+            IEnemy bossEnemy = boss.GetComponent<IEnemy>();
+            if (bossEnemy != null)
+            {
+                if (bossEnemy.IsDead())
+                {
+                    BossFightEnded();
+                }
+            }
+        }
+    }
+    void BossFightEnded()
+    {
+        border.SetActive(false);
+        PlayerManager.Instance.inBossFight = false;
+        PlayerManager.Instance.AttachCamera();
     }
 
     void LateUpdate()
@@ -147,9 +175,29 @@ public class Chunk : MonoBehaviour
         if (collider2d.GetComponent<PlayerManager>() != null)
         {
             ChunkManager.Instance.Signal(this);
+            if (bossChunk) PrepareBossFight();
         } else if (collider2d.GetComponent<IEnemy>() != null)
         {
             RelocateEnemy(collider2d.transform);
+        }
+    }
+
+    void PrepareBossFight()
+    {
+        if (border != null) border.SetActive(true);
+        if (bossViewPoint != null) PlayerManager.Instance.SetBossViewPoint(bossViewPoint.position);
+
+        PlayerManager.Instance.DetachCamera();
+        PlayerManager.Instance.inBossFight = true;
+
+        new RunAfter(3f, ActivateBoss);
+    }
+
+    void ActivateBoss()
+    {
+        if (boss != null && boss.GetComponent<IBoss>() != null)
+        {
+            boss.GetComponent<IBoss>().StartFight();
         }
     }
 
