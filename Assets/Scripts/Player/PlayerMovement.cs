@@ -38,6 +38,8 @@ public class PlayerMovement : MonoBehaviour
             Debug.LogError("Cannot locate Player Manager!");
             return;
         }
+        
+        Application.targetFrameRate = 75;
 
         rb2d = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
