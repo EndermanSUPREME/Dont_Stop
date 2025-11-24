@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 using Utilities;
 
 using UnityEngine;
@@ -21,13 +23,15 @@ public class Skeleton : MonoBehaviour, IEnemy
 
     [SerializeField] Vector2 groundCheckSize, hurtBoxSize;
     [SerializeField] Transform foot, leftHitCenter, rightHitCenter;
-    [SerializeField] int health = 50, damage = 10;
+    int maxHealth = 50;
+    [SerializeField] int health = 50, damage = 10, auraGain = 5;
 
     [SerializeField] float moveSpeed = 4f, gravityMultiplier = 1.5f, eyeSight = 4f, jumpForce = 4f, stoppingDistance = 1f;
     [SerializeField] float jumpChance = 0.3f, attackChance = 0.3f;
 
     [SerializeField] LayerMask playerLayer;
     [SerializeField] AnimationClip attackClip;
+    [SerializeField] Animator resurrectedVfx, effectAnim;
 
     Vector2 vel;
     Vector2 playerPos;
@@ -44,6 +48,8 @@ public class Skeleton : MonoBehaviour, IEnemy
         rb2d = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
+
+        maxHealth = health;
 
         SetLookDir();
     }
@@ -231,8 +237,60 @@ public class Skeleton : MonoBehaviour, IEnemy
         }
     }
 
-    public void TakeDamage(int amount)
+    void Resurrect()
     {
+        PlayerHUD.Instance.AuraFarmDetected();
+
+        anim.Play("revive");
+        resurrectedVfx.Play("activate");
+
+        health = maxHealth * 2;
+        damage *= 2;
+        auraGain = 0;
+
+        new RunAfter(anim.GetCurrentAnimatorClipInfo(0)[0].clip.length * 0.85f, ReviveFinished);
+    }
+    void ReviveFinished() { isDead = false; }
+
+    bool effectActive = false;
+    RunAfter effectAfter;
+    public void Ignite()
+    {
+        if (effectActive) return;
+        if (effectAnim != null) effectAnim.Play("ignite");
+
+        effectActive = true;
+        _ = DamageOverTime(1000);
+        effectAfter = new RunAfter(4f, EndEffect);
+    }
+    async Task DamageOverTime(int delay)
+    {
+        while (effectActive)
+        {
+            TakeDamage(3, false);
+            await Task.Delay(delay);
+        }
+    }
+    void EndEffect()
+    {
+        if (effectAnim != null) effectAnim.Play("no_effect");
+    }
+
+    int afterDeathHits = 0;
+    public void TakeDamage(int amount, bool getAura)
+    {
+        PlayerManager.Instance.GainAura(auraGain);
+
+        if (isDead)
+        {
+            ++afterDeathHits;
+            if (afterDeathHits == 5)
+            {
+                Resurrect();
+            }
+            return;
+        }
+
         health -= amount;
         alerted = true;
         
@@ -240,6 +298,7 @@ public class Skeleton : MonoBehaviour, IEnemy
         {
             health = 0;
             anim.Play("death");
+            resurrectedVfx.Play("idle");
             isDead = true;
         } else
             {

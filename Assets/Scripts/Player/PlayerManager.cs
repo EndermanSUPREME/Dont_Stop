@@ -57,8 +57,10 @@ public class PlayerManager : Singleton<PlayerManager>
     [Header("Player Stats")]
     public float moveSpeed = 4, jumpForce = 3, gravityMultiplier = 2, launchPadMultiplier = 2.5f;
     public int attackDamage = 10;
+    public float targetRange = 3f;
     int maxHealth = 100;
-    [SerializeField] int health = 100;
+    int maxAura = 100;
+    [SerializeField] int health = 100, aura = 0;
 
     RunAfter evt;
     public void ToggleIFrame()
@@ -72,6 +74,21 @@ public class PlayerManager : Singleton<PlayerManager>
     }
 
     public float GetHealthPercent() => Mathf.Clamp01((float)health / (float)maxHealth);
+    public float GetAuraPercent() => Mathf.Clamp01((float)aura / (float)maxAura);
+    public int GetAuraAmount() => aura;
+
+    public void GainHealth(float amount)
+    {
+        if (isDead) return;
+
+        health += (int)((float)maxHealth * amount);
+        if (health >= maxHealth) health = maxHealth;
+    }
+    public void GainAura(int amount)
+    {
+        aura += amount;
+        if (aura >= maxAura) aura = maxAura;
+    }
 
     public void TakeDamage(int amount)
     {
@@ -88,6 +105,11 @@ public class PlayerManager : Singleton<PlayerManager>
             {
                 playerAnimator.Play("hurt");
             }
+    }
+    public void ConsumeAura(int amount)
+    {
+        aura -= amount;
+        if (aura < 0) aura = 0;
     }
 
     [Header("Player States")]

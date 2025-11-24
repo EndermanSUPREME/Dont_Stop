@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 using Utilities;
 
 using UnityEngine;
@@ -20,13 +22,14 @@ public class Batty : MonoBehaviour, IEnemy
 
     [SerializeField] Vector2 hurtBoxSize;
     [SerializeField] Transform leftHitCenter, rightHitCenter;
-    [SerializeField] int health = 50, damage = 10;
+    [SerializeField] int health = 50, damage = 10, auraGain = 5;
 
     [SerializeField] float moveSpeed = 4f, eyeSight = 4f, stoppingDistance = 1f;
     [SerializeField] float attackChance = 0.3f;
 
     [SerializeField] LayerMask playerLayer;
     [SerializeField] AnimationClip attackClip;
+    [SerializeField] Animator effectAnim;
 
     Vector2 vel;
     Vector2 playerPos;
@@ -162,13 +165,44 @@ public class Batty : MonoBehaviour, IEnemy
         }
     }
 
-    public void TakeDamage(int amount)
+    bool effectActive = false;
+    RunAfter effectAfter;
+    public void Ignite()
     {
+        if (effectActive) return;
+        if (effectAnim != null) effectAnim.Play("ignite");
+
+        effectActive = true;
+        _ = DamageOverTime(1000);
+        effectAfter = new RunAfter(4f, EndEffect);
+    }
+    async Task DamageOverTime(int delay)
+    {
+        while (effectActive)
+        {
+            TakeDamage(3, false);
+            await Task.Delay(delay);
+        }
+    }
+    void EndEffect()
+    {
+        effectActive = false;
+        if (effectAnim != null) effectAnim.Play("no_effect");
+    }
+
+    public void TakeDamage(int amount, bool getAura)
+    {
+        if (isDead) return;
+        PlayerManager.Instance.GainAura(auraGain);
+        
         health -= amount;
         alerted = true;
         
         if (health <= 0)
         {
+            if (effectAfter != null) effectAfter.Stop();
+            EndEffect();
+
             health = 0;
             anim.Play("death");
             isDead = true;

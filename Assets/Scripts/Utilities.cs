@@ -33,6 +33,7 @@ namespace Utilities
         float timeElapsed = 0;
         Action func;
         bool finished;
+        bool forceQuit = false;
 
         public RunAfter(){}
         public RunAfter(float t, Action targetFunction)
@@ -45,7 +46,7 @@ namespace Utilities
 
         async Task Update()
         {
-            while (timeElapsed < timeTarget)
+            while (!forceQuit && timeElapsed < timeTarget)
             {
                 if (!PlayerManager.Instance.gamePaused)
                 {
@@ -53,11 +54,15 @@ namespace Utilities
                 }
                 await Task.Yield();
             }
-            Run();
+            if (!forceQuit) Run();
             finished = true;
         }
         // execute functions that do not return anything
         void Run() => func();
         public bool Finished() => finished;
+        public void Stop()
+        {
+            forceQuit = true;
+        }
     }
 }

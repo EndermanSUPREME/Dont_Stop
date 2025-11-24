@@ -6,9 +6,16 @@ public static class PlayerInput // support keyboard and controller
 {
     public static bool PressedJump() => Input.GetKeyDown(KeyCode. Space) || Input.GetButtonDown("Jump");
     public static bool HoldingJump() => Input.GetKey(KeyCode. Space) || Input.GetButton("Jump");
+
     public static bool MovingLeft() => Input.GetKey(KeyCode. A) || Input.GetAxis("Left_Stick_Horizontal") < -0.15f;
     public static bool MovingRight() => Input.GetKey(KeyCode. D) || Input.GetAxis("Left_Stick_Horizontal") > 0.15f;
+    
     public static bool PressedAttack() => Input.GetMouseButtonDown(1) || Input.GetButtonDown("Attack");
+
+    // public static bool PressedPrevSkill() => Input.GetKeyDown(KeyCode. Q) || Input.GetButtonDown("LeftBumper");
+    // public static bool PressedNextSkill() => Input.GetKeyDown(KeyCode. E) || Input.GetButtonDown("RightBumper");
+
+    public static bool PressedSkillButton() => Input.GetKeyDown(KeyCode. F) || Input.GetButtonDown("SkillUse");
 }
 
 [RequireComponent(typeof(Animator))]
@@ -160,5 +167,9 @@ public class PlayerMovement : MonoBehaviour
         Gizmos.color = Color.red;
         Gizmos.DrawWireCube(leftHitCenter.position, hurtBoxSize);
         Gizmos.DrawWireCube(rightHitCenter.position, hurtBoxSize);
+
+        Gizmos.color = Color.cyan;
+        if (PlayerManager.Instance != null)
+            Gizmos.DrawWireSphere(transform.position, PlayerManager.Instance.targetRange);
     }
 }//EndScript
