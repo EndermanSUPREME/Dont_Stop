@@ -1,12 +1,21 @@
 using System;
 using System.Threading.Tasks;
+using System.Collections;
+using System.Collections.Generic;
 
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 
 public class PlayerCamera : MonoBehaviour
 {
     [SerializeField] float verticalOffset = 4f, shiftSpeed = 10f;
     [SerializeField] Transform playerCenter;
+    [SerializeField] GameObject DeathScreen;
+    [SerializeField] Animator screenCover;
+
     int strength = 1;
     Vector3 target, bossViewPoint;
 
@@ -20,6 +29,11 @@ public class PlayerCamera : MonoBehaviour
         target = playerCenter.position;
         target.z = Camera.main.transform.position.z;
         target.y += verticalOffset * strength;
+
+        if (PlayerManager.Instance.IsDead())
+        {
+            MenuInteraction();
+        }
     }
 
     public void Attach() { transform.SetParent(PlayerManager.Instance.transform); }
@@ -97,4 +111,65 @@ public class PlayerCamera : MonoBehaviour
                 Camera.main.transform.position = bossViewPoint;
             }
     }
+
+    [SerializeField] List<Button> menuBtns = new List<Button>();
+    public void ShowDeathScreen()
+    {
+        DeathScreen.SetActive(true);
+        Invoke("ShowBtns", 1);
+    }
+    void ShowBtns()
+    {
+        foreach (var btn in menuBtns)
+        {
+            btn.gameObject.SetActive(true);
+        }
+    }
+
+    int btnIndex = 0;
+    void MenuInteraction()
+    {
+        if (DeathScreen.activeInHierarchy)
+        {
+            // new unity input system usage
+            var gamepad = Gamepad.current;
+            if (gamepad != null)
+            {
+                if (gamepad.dpad.up.wasPressedThisFrame)
+                {
+                    btnIndex = (btnIndex - 1 + menuBtns.Count) % menuBtns.Count;
+                } else if (gamepad.dpad.down.wasPressedThisFrame)
+                    {
+                        btnIndex = ++btnIndex % menuBtns.Count;
+                    }
+            }
+
+            // select a button
+            EventSystem.current.SetSelectedGameObject(menuBtns[btnIndex].gameObject);
+
+            if (PlayerInput.PressedJump())
+            {
+                // interact with button
+                menuBtns[btnIndex].onClick.Invoke();
+            }
+        }
+    }
+
+    // UI Target
+    public void ReturnToMenu()
+    {
+        DeathScreen.SetActive(false);
+        screenCover.Play("toBlack");
+        Invoke("LoadMainMenu", 4);
+    }
+    void LoadMainMenu() { SceneManager.LoadScene(0); }
+
+    // UI Target
+    public void ReloadGame()
+    {
+        DeathScreen.SetActive(false);
+        screenCover.Play("toBlack");
+        Invoke("LoadGame", 4);
+    }
+    void LoadGame() { SceneManager.LoadScene(1); }
 }//EndScript

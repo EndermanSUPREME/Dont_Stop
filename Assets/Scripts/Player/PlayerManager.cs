@@ -124,8 +124,7 @@ public class PlayerManager : Singleton<PlayerManager>
         {
             health = 0;
             isDead = true;
-            if (playerAnimator != null)
-                playerAnimator.Play("death");
+            Death();
         } else
             {
                 playerAnimator.Play("hurt");
@@ -135,9 +134,17 @@ public class PlayerManager : Singleton<PlayerManager>
     {
         health = 0;
         isDead = true;
-        if (playerAnimator != null)
-            playerAnimator.Play("death");
+        Death();
     }
+    void Death()
+    {
+        if (playerAnimator != null)
+                playerAnimator.Play("death");
+                
+        if (playerCamera != null)
+                playerCamera.ShowDeathScreen();
+    }
+
     public void ConsumeAura(int amount)
     {
         aura -= amount;
