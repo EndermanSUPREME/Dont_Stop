@@ -1,7 +1,7 @@
 interface IEnemy
 {
     void TakeDamage(int amount, bool getAura = true);
-    void Ignite();
+    void Ignite(float duration);
     bool IsDead();
 }
 

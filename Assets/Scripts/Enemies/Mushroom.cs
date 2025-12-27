@@ -251,7 +251,7 @@ public class Mushroom : MonoBehaviour, IEnemy
 
     bool effectActive = false;
     RunAfter effectAfter;
-    public void Ignite()
+    public void Ignite(float duration)
     {
         if (isDead) return;
         if (effectActive) return;
@@ -259,7 +259,7 @@ public class Mushroom : MonoBehaviour, IEnemy
 
         effectActive = true;
         _ = DamageOverTime(1000);
-        effectAfter = new RunAfter(4f, EndEffect);
+        effectAfter = new RunAfter(duration, EndEffect);
     }
     async Task DamageOverTime(int delay)
     {

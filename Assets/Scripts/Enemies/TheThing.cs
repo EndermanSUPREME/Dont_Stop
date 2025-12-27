@@ -18,8 +18,6 @@ public class TheThing : MonoBehaviour, IEnemy, IBoss
     bool attacking = false;
     bool jumped = false;
     bool useRunVel = true;
-
-    bool lookingLeft = false;
     bool active = false;
 
     [SerializeField] Vector2 groundCheckSize, hurtBoxSize;
@@ -98,9 +96,6 @@ public class TheThing : MonoBehaviour, IEnemy, IBoss
     void Move()
     {
         anim.SetBool("grounded", isGrounded());
-
-        if (rb2d.linearVelocityX < 0) lookingLeft = true;
-        else if (rb2d.linearVelocityX > 0) lookingLeft = false;
 
         if (isGrounded())
         {
@@ -246,7 +241,7 @@ public class TheThing : MonoBehaviour, IEnemy, IBoss
 
     bool effectActive = false;
     RunAfter effectAfter;
-    public void Ignite()
+    public void Ignite(float duration)
     {
         if (isDead) return;
         if (effectActive) return;
@@ -254,7 +249,7 @@ public class TheThing : MonoBehaviour, IEnemy, IBoss
 
         effectActive = true;
         _ = DamageOverTime(1000);
-        effectAfter = new RunAfter(4f, EndEffect);
+        effectAfter = new RunAfter(duration, EndEffect);
     }
     async Task DamageOverTime(int delay)
     {

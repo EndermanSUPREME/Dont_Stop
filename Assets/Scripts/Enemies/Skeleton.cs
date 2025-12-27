@@ -19,8 +19,6 @@ public class Skeleton : MonoBehaviour, IEnemy
     bool jumped = false;
     bool useRunVel = true;
 
-    bool lookingLeft = false;
-
     [SerializeField] Vector2 groundCheckSize, hurtBoxSize;
     [SerializeField] Transform foot, leftHitCenter, rightHitCenter;
     int maxHealth = 50;
@@ -108,9 +106,6 @@ public class Skeleton : MonoBehaviour, IEnemy
     void Move()
     {
         anim.SetBool("grounded", isGrounded());
-
-        if (rb2d.linearVelocityX < 0) lookingLeft = true;
-        else if (rb2d.linearVelocityX > 0) lookingLeft = false;
 
         if (isGrounded())
         {
@@ -255,7 +250,7 @@ public class Skeleton : MonoBehaviour, IEnemy
 
     bool effectActive = false;
     RunAfter effectAfter;
-    public void Ignite()
+    public void Ignite(float duration)
     {
         if (isDead) return;
         if (effectActive) return;
@@ -263,7 +258,7 @@ public class Skeleton : MonoBehaviour, IEnemy
 
         effectActive = true;
         _ = DamageOverTime(1000);
-        effectAfter = new RunAfter(4f, EndEffect);
+        effectAfter = new RunAfter(duration, EndEffect);
     }
     async Task DamageOverTime(int delay)
     {
